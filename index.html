@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f5f5f7">
+<title>卷宗音乐库</title>
+<style>
+:root{
+  --bg:#f5f5f7;--card:rgba(255,255,255,.62);--card2:rgba(255,255,255,.42);
+  --text:#171719;--muted:#77777d;--line:rgba(0,0,0,.07);
+  --accent:#111;--shadow:0 18px 50px rgba(0,0,0,.08);
+  --blur:24px;--radius:26px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:
+radial-gradient(circle at 10% 0%,#fff 0,transparent 32%),
+radial-gradient(circle at 100% 15%,#e9edf4 0,transparent 36%),var(--bg)}
+body{overflow-x:hidden}
+button,input{font:inherit}
+button{border:0;background:none;color:inherit}
+.app{max-width:920px;margin:auto;padding:18px 18px 150px;min-height:100vh}
+.glass{background:var(--card);border:1px solid rgba(255,255,255,.7);box-shadow:var(--shadow);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur))}
+header{position:sticky;top:10px;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:22px;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.5px}
+.logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#111;color:white;box-shadow:0 6px 16px #0002}
+.logo svg{width:18px}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:.22s}
+.icon-btn:active,.circle:active,.play:active{transform:scale(.9)}
+.hero{padding:8px 4px 18px}
+.kicker{font-size:13px;color:var(--muted);margin-bottom:7px}
+h1{font-size:clamp(31px,8vw,52px);line-height:1.02;letter-spacing:-2px;margin:0 0 14px;font-weight:850}
+.sub{color:var(--muted);font-size:14px;line-height:1.65;max-width:680px}
+.search{display:flex;gap:9px;padding:8px;border-radius:22px;margin:15px 0 18px}
+.search input{min-width:0;flex:1;border:0;outline:0;background:transparent;padding:11px 12px;font-size:16px;color:var(--text)}
+.search input::placeholder{color:#99999f}
+.search button{background:#111;color:#fff;padding:0 19px;border-radius:17px;font-weight:700;cursor:pointer;transition:.2s}
+.search button:active{transform:scale(.96)}
+.status{font-size:13px;color:var(--muted);min-height:22px;margin:2px 4px 10px}
+.list{display:grid;gap:10px}
+.song{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:13px;padding:10px;border-radius:22px;cursor:pointer;opacity:0;transform:translateY(12px);animation:rise .55s forwards cubic-bezier(.2,.8,.2,1);transition:transform .22s,background .22s}
+.song:hover{transform:translateY(-2px)}
+.song.active{background:rgba(255,255,255,.78);box-shadow:0 12px 30px #0000000b}
+.cover{width:56px;height:56px;border-radius:15px;object-fit:cover;background:#e5e5e7;box-shadow:0 5px 15px #0002}
+.info{min-width:0}
+.title{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.artist{font-size:13px;color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:3px}
+.small-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#666;transition:.2s}
+.small-btn:active{background:#0001;transform:scale(.9)}
+.empty{padding:55px 15px;text-align:center;color:var(--muted)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #bbb;border-top-color:#111;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+.player{position:fixed;z-index:40;left:50%;bottom:max(12px,env(safe-area-inset-bottom));width:min(920px,calc(100% - 20px));transform:translate(-50%,120%);transition:transform .5s cubic-bezier(.2,.8,.2,1);padding:9px 11px;border-radius:25px}
+.player.show{transform:translate(-50%,0)}
+.player-top{display:flex;align-items:center;gap:11px}
+.mini-cover{width:47px;height:47px;border-radius:14px;object-fit:cover}
+.mini-info{min-width:0;flex:1}
+.mini-title{font-size:14px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-artist{font-size:11px;color:var(--muted);margin-top:3px}
+.play{width:43px;height:43px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;transition:.2s;cursor:pointer}
+.progress{height:3px;background:#00000012;border-radius:9px;margin:9px 4px 2px;overflow:hidden;cursor:pointer}
+.progress i{display:block;width:0;height:100%;background:#111;border-radius:9px}
+.player-tools{display:flex;align-items:center;gap:5px}
+.mode{font-size:11px;color:#777;padding:5px 8px;border-radius:10px;background:#00000008}
+.sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:#0000;pointer-events:none;transition:background .35s}
+.sheet.open{background:#0005;pointer-events:auto}
+.sheet-panel{width:min(920px,100%);max-height:88vh;border-radius:30px 30px 0 0;transform:translateY(105%);transition:transform .5s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:18px 18px calc(28px + env(safe-area-inset-bottom))}
+.sheet.open .sheet-panel{transform:translateY(0)}
+.handle{width:42px;height:5px;border-radius:9px;background:#0002;margin:0 auto 17px}
+.now{display:grid;place-items:center;padding:6px 0 20px}
+.big-cover{width:min(66vw,300px);aspect-ratio:1;border-radius:30px;object-fit:cover;box-shadow:0 25px 65px #0003}
+.now h2{margin:18px 0 3px;font-size:23px}
+.now p{margin:0;color:var(--muted)}
+.lyrics{margin-top:8px;padding:25px 8px;min-height:180px;text-align:center}
+.lyric{padding:7px 6px;color:#999;font-size:15px;line-height:1.5;transition:.35s;cursor:pointer}
+.lyric.current{color:#111;font-weight:800;font-size:18px;transform:scale(1.03)}
+.toast{position:fixed;z-index:100;left:50%;top:18px;transform:translate(-50%,-130%);padding:10px 15px;border-radius:15px;background:#111;color:#fff;font-size:13px;box-shadow:0 10px 30px #0003;transition:.35s}
+.toast.show{transform:translate(-50%,0)}
+.back-zone{position:fixed;left:0;top:0;bottom:0;width:22px;z-index:70}
+@keyframes rise{to{opacity:1;transform:none}} @keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){.app{padding-left:12px;padding-right:12px}.song{grid-template-columns:52px 1fr auto}.cover{width:52px;height:52px}.actions .small-btn.download{display:none}}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<div class="back-zone" id="backZone"></div>
+
+<main class="app" id="app">
+  <header class="glass">
+    <div class="brand"><div class="logo" aria-hidden="true">♪</div><span>卷宗音乐库</span></div>
+    <button class="icon-btn" id="aboutBtn" aria-label="说明">i</button>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">JOURNAL MUSIC LIBRARY</div>
+    <h1>找到一首歌，<br>然后安静地听。</h1>
+    <div class="sub">搜索网易云音乐曲目，单一播放器统一控制。歌词、封面与播放状态都会跟着当前歌曲走。</div>
+  </section>
+
+  <form class="search glass" id="searchForm">
+    <input id="query" autocomplete="off" placeholder="歌名、歌手，例如：周杰伦 晴天">
+    <button>搜索</button>
+  </form>
+  <div class="status" id="status"></div>
+  <section class="list" id="list"></section>
+</main>
+
+<div class="player glass" id="player">
+  <div class="player-top">
+    <img class="mini-cover" id="miniCover" alt="">
+    <div class="mini-info">
+      <div class="mini-title" id="miniTitle">未播放</div>
+      <div class="mini-artist" id="miniArtist">选择一首歌开始</div>
+    </div>
+    <div class="player-tools">
+      <button class="small-btn" id="modeBtn" title="播放模式">顺序</button>
+      <button class="play" id="playBtn" title="播放/暂停">▶</button>
+      <button class="small-btn" id="lyricsBtn" title="歌词">☰</button>
+    </div>
+  </div>
+  <div class="progress" id="progress"><i></i></div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-panel glass" id="sheetPanel">
+    <div class="handle"></div>
+    <div class="now">
+      <img class="big-cover" id="bigCover" alt="">
+      <h2 id="bigTitle">—</h2><p id="bigArtist">—</p>
+    </div>
+    <div class="lyrics" id="lyrics"><div class="empty">歌词加载中…</div></div>
+  </div>
+</div>
+
+<script>
+const API={
+ search:'https://music-api.gdstudio.xyz/api.php',
+ url:'https://api.injahow.cn/meting/?server=netease&type=url&id=',
+ pic:'https://api.injahow.cn/meting/?server=netease&type=pic&id=',
+ lrc:'https://api.injahow.cn/meting/?server=netease&type=lrc&id='
+};
+const audio=new Audio();
+audio.preload='metadata';
+let songs=[],current=-1,mode=0,lyrics=[],raf=0,lastLyric=-1;
+const $=s=>document.querySelector(s);
+const list=$('#list'),status=$('#status'),player=$('#player'),sheet=$('#sheet');
+
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),1800)}
+function stripEmoji(s){return s.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\uFE0F]/gu,'').replace(/[\u200D]/g,'').trim()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function score(song,q){
+  const name=song.name||'', artists=(song.artist||[]).join(' ');
+  const x=q.toLowerCase(), n=name.toLowerCase(), a=artists.toLowerCase();
+  let s=0;
+  if(n===x)s+=100;if(n.startsWith(x))s+=45;if(n.includes(x))s+=25;if(a.includes(x))s+=65;
+  if(/原唱|正式版|official/i.test(name))s+=15;
+  if(/DJ|钢琴|伴奏|cover|女声|深情|吉他|纯音乐/i.test(name))s-=35;
+  return s;
+}
+async function search(q){
+  q=stripEmoji(q);
+  if(!q){status.textContent='请输入有效歌名或歌手';list.innerHTML='';return}
+  status.innerHTML='<span class="spinner"></span>正在寻找…';list.innerHTML='';
+  try{
+    const u=API.search+'?types=search&source=netease&counts=20&name='+encodeURIComponent(q);
+    const r=await fetch(u);if(!r.ok)throw Error('search');
+    const data=await r.json();songs=(Array.isArray(data)?data:[]).sort((a,b)=>score(b,q)-score(a,q));
+    render();
+    status.textContent=songs.length?`找到 ${songs.length} 首，按相关度排列`:'没有找到结果';
+  }catch(e){status.textContent='搜索失败，请稍后重试或检查网络';toast('搜索接口暂时不可用')}
+}
+function render(){
+  list.innerHTML=songs.map((s,i)=>`
+    <article class="song glass ${i===current?'active':''}" data-i="${i}" style="animation-delay:${Math.min(i*.035,.45)}s">
+      <img class="cover" loading="lazy" src="${API.pic+encodeURIComponent(s.pic_id||s.id)}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 rx=%2215%22 fill=%22%23ddd%22/%3E%3C/svg%3E'">
+      <div class="info"><div class="title">${esc(s.name)}</div><div class="artist">${esc((s.artist||[]).join(' / '))} · ${esc(s.album||'')}</div></div>
+      <div class="actions"><button class="small-btn download" data-download="${i}" title="下载">↓</button><button class="small-btn" data-play="${i}" title="播放">▶</button></div>
+    </article>`).join('');
+}
+list.addEventListener('click',e=>{
+  const dl=e.target.closest('[data-download]'); if(dl){e.stopPropagation();downloadSong(+dl.dataset.download);return}
+  const item=e.target.closest('.song');if(item)playSong(+item.dataset.i);
+});
+async function playSong(i){
+  const s=songs[i];if(!s)return;current=i;render();updatePlayer(s);
+  try{
+    toast('正在获取音频…');
+    const r=await fetch(API.url+encodeURIComponent(s.url_id||s.id));
+    if(!r.ok)throw Error('url');
+    const u=r.url;
+    audio.src=u; audio.loop=mode===1;
+    await audio.play(); toast('开始播放');
+    loadLyrics(s);
+  }catch(e){toast('这首歌暂时无法播放');status.textContent='播放地址获取失败，可能是版权或源站限制'}
+}
+function updatePlayer(s){
+  player.classList.add('show');$('#miniCover').src=API.pic+encodeURIComponent(s.pic_id||s.id);
+  $('#miniTitle').textContent=s.name||'—';$('#miniArtist').textContent=(s.artist||[]).join(' / ')||'—';
+  $('#bigCover').src=API.pic+encodeURIComponent(s.pic_id||s.id);$('#bigTitle').textContent=s.name||'—';$('#bigArtist').textContent=(s.artist||[]).join(' / ');
+}
+$('#playBtn').onclick=async()=>{if(!audio.src&&current<0)return;if(audio.paused){try{await audio.play()}catch{toast('请先点选歌曲')}}else audio.pause()};
+audio.addEventListener('play',()=>$('#playBtn').textContent='❚❚');
+audio.addEventListener('pause',()=>$('#playBtn').textContent='▶');
+audio.addEventListener('ended',()=>{
+  if(mode===1)return;
+  if(!songs.length)return;
+  let next=mode===2?Math.floor(Math.random()*songs.length):(current+1)%songs.length;
+  playSong(next);
+});
+audio.addEventListener('timeupdate',()=>{if(!audio.duration)return;$('#progress i').style.width=(audio.currentTime/audio.duration*100)+'%'});
+$('#progress').onclick=e=>{if(!audio.duration)return;const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration};
+function startSmooth(){cancelAnimationFrame(raf);const tick=()=>{if(audio.duration)$('#progress i').style.width=(audio.currentTime/audio.duration*100)+'%';raf=requestAnimationFrame(tick)};tick()}startSmooth();
+
+$('#modeBtn').onclick=()=>{mode=(mode+1)%3;$('#modeBtn').textContent=['顺序','单曲','随机'][mode];audio.loop=mode===1;toast(['顺序播放','单曲循环','随机播放'][mode])};
+async function loadLyrics(s){
+  lyrics=[];lastLyric=-1;$('#lyrics').innerHTML='<div class="empty"><span class="spinner"></span>歌词加载中…</div>';
+  try{
+    const r=await fetch(API.lrc+encodeURIComponent(s.lyric_id||s.id));const text=await r.text();
+    const re=/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\](.*)/g,arr=[];let m;
+    while((m=re.exec(text)))arr.push({t:+m[1]*60 + +m[2] + (+m[3]||0)/1000,text:m[4].trim()});
+    lyrics=arr.filter(x=>x.text);renderLyrics();
+  }catch{$('#lyrics').innerHTML='<div class="empty">歌词暂时无法获取</div>'}
+}
+function renderLyrics(){
+  if(!lyrics.length){$('#lyrics').innerHTML='<div class="empty">这首歌没有可用歌词</div>';return}
+  $('#lyrics').innerHTML=lyrics.map((l,i)=>`<div class="lyric" data-li="${i}">${esc(l.text)}</div>`).join('');
+}
+function syncLyric(){
+  if(!lyrics.length)return;
+  let idx=-1;for(let i=0;i<lyrics.length;i++){if(audio.currentTime>=lyrics[i].t)idx=i;else break}
+  if(idx===lastLyric)return;lastLyric=idx;
+  document.querySelectorAll('.lyric.current').forEach(x=>x.classList.remove('current'));
+  const el=document.querySelector(`[data-li="${idx}"]`);
+  if(el){el.classList.add('current');el.scrollIntoView({behavior:'smooth',block:'center'})}
+}
+audio.addEventListener('timeupdate',syncLyric);
+$('#lyricsBtn').onclick=()=>sheet.classList.add('open');
+sheet.addEventListener('click',e=>{if(e.target===sheet)sheet.classList.remove('open')});
+$('#lyrics').addEventListener('click',e=>{const el=e.target.closest('[data-li]');if(el&&lyrics[+el.dataset.li])audio.currentTime=lyrics[+el.dataset.li].t});
+$('#searchForm').onsubmit=e=>{e.preventDefault();search($('#query').value)};
+$('#aboutBtn').onclick=()=>{toast('公共接口可能变动；播放地址带时效签名')};
+
+async function downloadSong(i){
+  const s=songs[i];if(!s)return;
+  toast('正在准备下载…');
+  try{
+    const r=await fetch(API.url+encodeURIComponent(s.url_id||s.id));
+    if(!r.ok)throw Error();
+    const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=u;a.download=`${s.name||'歌曲'}-${(s.artist||[]).join('_')||'未知歌手'}.mp3`;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('已开始保存');
+  }catch{toast('下载失败，已尝试直接打开音频');try{const r=await fetch(API.url+encodeURIComponent(s.url_id||s.id));window.open(r.url,'_blank')}catch{}}
+}
+
+/* “遇见式返回”：手机边缘右滑关闭歌词/详情；没有面板时退回上一页 */
+let sx=0,sy=0,tracking=false;
+document.addEventListener('touchstart',e=>{const t=e.changedTouches[0];sx=t.clientX;sy=t.clientY;tracking=sx<28},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!tracking)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=Math.abs(t.clientY-sy);tracking=false;
+  if(dx>70&&dy<90){if(sheet.classList.contains('open'))sheet.classList.remove('open');else history.back()}
+},{passive:true});
+window.addEventListener('popstate',()=>{if(sheet.classList.contains('open'))sheet.classList.remove('open')});
+$('#query').addEventListener('keydown',e=>{if(e.key==='Escape')e.target.blur()});
+search('周杰伦');
+</script>
+</body>
+</html>
