@@ -294,18 +294,21 @@ const CONFIG = {
   musicSrc: 'heart-cards-bgm.mp3',
   musicVolume: 0.9,
   messages: [
-    '', '', '', '', '',
-    '', '', '', '', '',
-    '', '', '', '', '',
-    '', '', '', '', ''
+    '洁洁，18岁啦', '生日快乐呀', '要天天开心', '照顾好自己',
+    '骑车别玩手机', '按时吃饭饭', '别老发呆啦', '想你了',
+    '懒羊羊本羊', '公主请开心', '岁岁都平安', '万事都顺意',
+    '成年快乐哦', '钟洁洁，18岁', '想吃你做的饭', '要好好睡觉',
+    '', '', '', '', '', ''
   ],
   photos: [
-    null, null, null, null, null,
-    null, null, null, null, null,
-    null, null, null, null, null,
-    null, null, null, null, null
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null,
+    null, null, null, null,
+    'photos/photo1.jpg', 'photos/photo5.jpg', 'photos/photo9.jpg',
+    'photos-me/me1.jpg', 'photos/photo13.jpg', 'photos-me/me5.jpg'
   ],
-  useDemoText: true,
+  useDemoText: false,
   roundsToFill: 3,
   cardInterval: 620,
   flyDuration: 850,
@@ -318,10 +321,10 @@ const CONFIG = {
 };
 
 const DEMO_TEXT = [
-  '记得多喝水哦', '保持好心情,', '梦想成真', '别太累啦,偶\n尔偷懒也好', '顺顺利利',
-  '早点休息,', '别熬夜', '记得好好护肤', '你超棒的', '记得吃水果',
-  '要相信自己奥', '天冷了,多穿\n衣服', '愿所有烦恼都\n消失', '我想你了', '好好爱自己',
-  '今天过得开心\n嘛', '珍惜每一刻', '金榜题名', '期待下一次见\n面,', '每天都要元气\n满满'
+  '洁洁，18岁啦', '生日快乐呀', '要天天开心', '照顾好自己', '骑车别玩手机',
+  '按时吃饭饭', '别老发呆啦', '想你了', '懒羊羊本羊', '公主请开心',
+  '岁岁都平安', '万事都顺意', '成年快乐哦', '钟洁洁，18岁', '想吃你做的饭',
+  '好好睡觉', '', '', '', '', '', ''
 ];
 
 const rand    = (a, b) => a + Math.random() * (b - a);
@@ -441,6 +444,7 @@ class Card{
     this.ci    = contentIndex;
     this.slot  = -1;
     this.placed = false;
+    this.dropped = false;
 
     this.el = document.createElement('div');
     this.el.className = 'card t' + (contentIndex % 8);
@@ -450,7 +454,7 @@ class Card{
 
     const head = document.createElement('div');
     head.className = 'head';
-    head.innerHTML = '<span class="emoji">💝</span><span class="head-text">提示</span>';
+    head.innerHTML = '<span class="emoji">🎂</span><span class="head-text">18</span>';
 
     const body = document.createElement('div');
     body.className = 'body';
@@ -466,7 +470,9 @@ class Card{
     } else if (text){
       body.textContent = text;
     } else {
-      body.innerHTML = '<div class="sk"><i></i><i></i></div>';
+      // 空内容卡片显示随机小装饰，不显示骨架
+      const deco = ['🎈','⭐','🎀','🌸','✨','🍰'];
+      body.innerHTML = '<span style="font-size:26px;opacity:0.85;">' + deco[contentIndex % deco.length] + '</span>';
     }
 
     this.inner.appendChild(head);
@@ -505,6 +511,22 @@ class Card{
 
   clearDelay(){
     this.el.style.setProperty('--fly-delay', '0ms');
+  }
+
+  /* 散开后点击：像物体一样自然掉落，从底部消失 */
+  drop(){
+    if (this.dropped) return;
+    this.dropped = true;
+    const rect = this.el.getBoundingClientRect();
+    const startY = rect.top;
+    const fallDistance = window.innerHeight - startY + 100;
+    const drift = rand(-40, 40);
+    const endRot = rand(-120, 120);
+    this.el.style.transition = 'transform 1.6s cubic-bezier(0.45,0,0.9,0.6), opacity 1.6s ease-in';
+    const cur = this.el.style.transform;
+    this.el.style.transform = cur + ' translate3d(' + drift + 'px,' + fallDistance + 'px,0) rotate(' + endRot + 'deg)';
+    this.el.style.opacity = '0';
+    setTimeout(() => this.destroy(), 1700);
   }
 
   gone(delay){
@@ -688,6 +710,17 @@ function explode(target){
     maxEnd = Math.max(maxEnd, dur + delay);
     TimerPool.set(() => c.clearDelay(), dur + delay + 60);
   });
+
+  // 散开落定后，给每张卡片绑定点击掉落（像物体一样自然掉落）
+  TimerPool.set(() => {
+    State.cards.forEach((c) => {
+      c.el.style.cursor = 'pointer';
+      c.el.addEventListener('click', function handler(){
+        c.drop();
+        c.el.removeEventListener('click', handler);
+      });
+    });
+  }, maxEnd + 100);
 
   TimerPool.set(() => {
     // 散是满天星后等8秒，跳转到微信二维码页面
