@@ -310,8 +310,8 @@ const CONFIG = {
   ],
   useDemoText: false,
   roundsToFill: 3,
-  cardInterval: 620,
-  flyDuration: 850,
+  cardInterval: 300,
+  flyDuration: 480,
   convergeDelay: 1200,
   convergeDuration: 700,
   explodeDelayMin: 1900,
@@ -599,6 +599,8 @@ const State = {
 
 function startExperience(){
   document.getElementById('startBtn').classList.add('disabled');
+  // 点击按钮瞬间立刻启动背景音乐，不再等卡片动画
+  BGM.start();
 
   const ov = document.getElementById('transitionOverlay');
   const flash = document.createElement('div');
@@ -646,8 +648,6 @@ function spawnNext(){
   TimerPool.set(() => {
     card.placed = true;
     card.clearDelay();
-    // 第一个卡片落入位置后才播放背景音乐
-    if (i === 0) BGM.start();
   }, CONFIG.flyDuration + 60);
 
   State.slotIndex++;
